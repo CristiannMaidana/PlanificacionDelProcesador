@@ -26,4 +26,30 @@ public class Process {
                 ", priority=" + priority +
                 '}';
     }
+
+    public int getArrivalTime() {
+        return arrivalTime;
+    }
+
+    public int getCantBurstCPU() {
+        return cantBurstCPU;
+    }
+
+    public int getTimerBurstCPU() {
+        return timeBurstCPU;
+    }
+
+    public int getTimerBurstIO() {
+        return timerBurstIO;
+    }
+
+    public int getPriority() {
+        return priority;
+    }
+
+    public String getProcessName() { return processName; }
+
+    public void setCantBurstCPU(int cantBurstCPU) {
+        this.cantBurstCPU = cantBurstCPU;
+    }
 }
