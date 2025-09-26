@@ -7,4 +7,20 @@ public class OperatingSystem {
         this.timeSwitchProcess = timeSwitchProcess;
         this.Quantum = Quantum;
     }
+
+    public int getTIP(){
+        return timeNewProcess;
+    }
+
+    public int getTFP(){
+        return timeEndProcess;
+    }
+
+    public int getTCP(){
+        return timeSwitchProcess;
+    }
+
+    public int getQuantum(){
+        return Quantum;
+    }
 }
