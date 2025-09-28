@@ -79,7 +79,7 @@ public class Main {
                     }
                     simulador.run();
                     inicializoSemaforo();
-                    paginaFinal = new PrintPage(latch, simulador.getMetrics(), paginaPlanificador.getPlannerName());
+                    paginaFinal = new PrintPage(latch, simulador.getMetrics(), paginaPlanificador.getPlannerName(), processField);
                     paginaFinal.setVisible(true);
                     paginaFinal.setLocationRelativeTo(null);
                     latch.await();
