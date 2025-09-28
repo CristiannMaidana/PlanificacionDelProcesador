@@ -1,0 +1,8 @@
+<component name="ArtifactManager">
+  <artifact type="jar" name="PlanificacionDelProcesador:jar2">
+    <output-path>$PROJECT_DIR$/out/artifacts/PlanificacionDelProcesador_jar2</output-path>
+    <root id="archive" name="PlanificacionDelProcesador.jar">
+      <element id="module-output" name="PlanificacionDelProcesador" />
+    </root>
+  </artifact>
+</component>
