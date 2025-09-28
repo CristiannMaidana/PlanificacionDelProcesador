@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 public class PrintPage extends JFrame {
@@ -12,10 +13,11 @@ public class PrintPage extends JFrame {
     private JButton crearArchivoButton;
     private JButton repetirButton;
     private JLabel JLabelResults;
+    private JButton verProcesosButton;
     private Metrics metrics;
     private Boolean again = false, finalizar = false;
 
-    public PrintPage(CountDownLatch latch, Metrics m, String nombre) {
+    public PrintPage(CountDownLatch latch, Metrics m, String nombre, List<Process> processes) {
         setContentPane(PrintPage);
         setSize(650,500);
         setLocationRelativeTo(null);
@@ -69,6 +71,17 @@ public class PrintPage extends JFrame {
                     latch.countDown();
                     dispose();
                 }
+            }
+        });
+        verProcesosButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                DefaultListModel<String> model = new DefaultListModel<>();
+                model.addElement("Datos de procesos: ");
+                for (Process p : processes) {
+                    model.addElement(p.toString());
+                }
+                listResults.setModel(model);
             }
         });
     }
