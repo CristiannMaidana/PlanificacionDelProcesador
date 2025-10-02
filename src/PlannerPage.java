@@ -103,7 +103,8 @@ public class PlannerPage extends JFrame {
                     );
                 }
                 else{
-                    System.out.println(textFieldTIP.getText());
+                    System.out.println(textFieldTIP.getText()+textFieldTFP.getText()+textFieldQuantum.getText()+textFieldTCP.getText());
+                    System.out.println("Fallo");
                     completaCarga = true;
                     latch.countDown();
                     dispose();

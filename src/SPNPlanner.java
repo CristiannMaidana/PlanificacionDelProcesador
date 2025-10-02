@@ -13,32 +13,34 @@ public class SPNPlanner extends SimulatorStrategy{
 
     @Override
     public void run() {
-        while (!done() || soPhase != SOPhase.NONE || running != null || !ready.isEmpty() || !blocked.isEmpty() || !field.isEmpty() || !admissionBuffer.isEmpty() || !admittingNow.isEmpty()) {
+        while (!done() || soPhase != SOPhase.NONE || running != null
+                || !ready.isEmpty() || !blocked.isEmpty()
+                || !field.isEmpty() || !admissionBuffer.isEmpty() || !admittingNow.isEmpty()) {
 
             while (!field.isEmpty() && field.peekFirst().getArrivalTime() == t) {
                 admissionBuffer.add(field.removeFirst());
             }
 
-            // Corriendo -> Terminado (TFP)
+            // CORRIENDO -> TERMINADO (TFP)
             if (burstJustFinished && running != null && running.remainingBursts == 1) {
                 log("t=%d | CORRIENDO→TERMINADO: %s", t, running.getProcessName());
-                // TFP
-                soPhase = SOPhase.TFP;
-                soBusy = OS.getTFP();
-                finishingProcess = running;
-                // limpio proceso de CPU
-                running = null;
-                cpuRemaining = 0;
-                burstJustFinished = false;
+                if (OS.getTFP() <= 0) {
+                    M.onFinish(running, t);
+                    running = null;
+                    cpuRemaining = 0;
+                    burstJustFinished = false;
+                } else {
+                    soPhase = SOPhase.TFP; soBusy = OS.getTFP();
+                    finishingProcess = running;
+                    running = null; cpuRemaining = 0; burstJustFinished = false;
+                }
             }
-            // Corriendo -> Bloqueado (I/O)
+            // CORRIENDO -> BLOQUEADO
             else if (burstJustFinished && running != null) {
                 log("t=%d | CORRIENDO→BLOQUEADO: %s", t, running.getProcessName());
                 blocked.add(new BlockedItem(running, running.getTimerBurstIO()));
                 running.setRemainingBursts(running.getRemainingBursts() - 1);
-                running = null;
-                cpuRemaining = 0;
-                burstJustFinished = false;
+                running = null; cpuRemaining = 0; burstJustFinished = false;
             }
 
 
@@ -61,16 +63,21 @@ public class SPNPlanner extends SimulatorStrategy{
                 tipJustFinished = false;
             }
             if (soPhase == SOPhase.NONE && !admissionBuffer.isEmpty() && admittingNow.isEmpty()) {
-                // TIP
                 admittingNow.addAll(admissionBuffer);
                 admissionBuffer.clear();
-                soPhase = SOPhase.TIP;
-                soBusy = OS.getTIP();
+                if (OS.getTIP() <= 0) {
+                    for (Process p : admittingNow) {
+                        log("t=%d | NUEVO→LISTO (TIP=0): %s", t, p.getProcessName());
+                        ready.add(p);
+                    }
+                    admittingNow.clear();
+                } else {
+                    soPhase = SOPhase.TIP; soBusy = OS.getTIP();
+                }
             }
 
             // Despacho READY->CORRIENDO (TCP)
             if (tcpJustFinished) {
-                // Fin TCP
                 if (nextDispatch != null) {
                     running = nextDispatch;
                     cpuRemaining = running.getTimerBurstCPU();
@@ -81,42 +88,42 @@ public class SPNPlanner extends SimulatorStrategy{
             }
             if (soPhase == SOPhase.NONE && running == null && !ready.isEmpty()) {
                 nextDispatch = ready.poll();
-                soPhase = SOPhase.TCP;
-                soBusy = OS.getTCP();
+                if (OS.getTCP() <= 0) {
+                    running = nextDispatch;
+                    cpuRemaining = running.getTimerBurstCPU();
+                    log("t=%d | LISTO→CORRIENDO (TCP=0): %s", t, running.getProcessName());
+                    nextDispatch = null;
+                } else {
+                    soPhase = SOPhase.TCP; soBusy = OS.getTCP();
+                }
             }
 
-            // Consumir 1 tick de trabajo
             if (soPhase != SOPhase.NONE) {
-                soBusy--;
-                M.cpuSO++;
-                if (soBusy == 0) {
-                    if (soPhase == SOPhase.TIP)
-                        tipJustFinished = true;
-                    else if (soPhase == SOPhase.TFP) {
-                        tfpJustFinished = true;
+                if (soBusy > 0) {
+                    soBusy--; M.cpuSO++;
+                    if (soBusy == 0) {
+                        if (soPhase == SOPhase.TIP)        tipJustFinished = true;
+                        else if (soPhase == SOPhase.TFP)   tfpJustFinished = true;
+                        else if (soPhase == SOPhase.TCP)   tcpJustFinished = true;
+                        soPhase = SOPhase.NONE;
                     }
-                    else if (soPhase == SOPhase.TCP)
-                        tcpJustFinished = true;
+                } else {
+                    if      (soPhase == SOPhase.TIP) tipJustFinished = true;
+                    else if (soPhase == SOPhase.TFP) tfpJustFinished = true;
+                    else if (soPhase == SOPhase.TCP) tcpJustFinished = true;
                     soPhase = SOPhase.NONE;
                 }
-            }
-            else if (running != null) {
-                cpuRemaining--;
-                M.cpuProc++;
-                M.addCpuUsed(running);
-                if (cpuRemaining == 0) {
-                    burstJustFinished = true;
-                }
-            }
-            else {
+            } else if (running != null) {
+                cpuRemaining--; M.cpuProc++; M.addCpuUsed(running);
+                if (cpuRemaining == 0) { burstJustFinished = true; }
+            } else {
                 M.cpuIdle++;
             }
 
             // Descontar I/O
             for (Iterator<BlockedItem> it = blocked.iterator(); it.hasNext(); ) {
                 BlockedItem bi = it.next();
-                if (bi.ioRemaining > 0)
-                    bi.ioRemaining--;
+                if (bi.ioRemaining > 0) bi.ioRemaining--;
                 if (bi.ioRemaining == 0) {
                     toReadyNextTick.add(bi.p);
                     it.remove();
