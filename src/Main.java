@@ -2,8 +2,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
-//TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
-// click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     private static CountDownLatch latch;
     private static PlannerPage paginaPlanificador;
@@ -15,7 +13,6 @@ public class Main {
         latch = new CountDownLatch(1);
     }
 
-    // ===================== Ejemplo de uso =====================
     public static void main(String[] args) throws InterruptedException {
         OperatingSystem OS;
         List<Process> processField = new ArrayList<>();
